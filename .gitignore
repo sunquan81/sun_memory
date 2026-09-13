@@ -1,0 +1,17 @@
+# 用户数据（不进版本库）
+sun_memory/data/
+sun_memory/logs/
+sun_memory/蜘蛛网/
+sun_memory/core/_*.json
+sun_memory/core/豆辞典.json
+sun_memory/core/触发路由.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# 编辑器
+.vscode/
+.idea/
