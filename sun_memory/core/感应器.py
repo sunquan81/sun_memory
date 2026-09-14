@@ -19,7 +19,7 @@ import json, os, re, sys
 from collections import defaultdict
 
 # ── 路径（可被SUNMEM_DB隔离的蜘蛛网用环境变量）──
-SPIDER = os.environ.get("蜘蛛网_INDEX", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "蜘蛛网", "索引.json"))
+SPIDER = os.environ.get('蜘蛛网_INDEX', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '蜘蛛网', '索引.json'))
 
 # 关系强度（语义边>共现边·概念链路靠它传导）
 REL_STRENGTH = {'父子': 1.0, '同义': 0.9, '因果': 0.85, '关联': 0.6, '共现': 0.15}
@@ -74,12 +74,21 @@ def _时间阻尼(创建时间):
     return 1.0 / (1.0 + days / 365.0)
 
 
+_网缓存 = {'数据': None, 'adj': None, '时间': 0}  # 2026-09-14 外部审查修复：进程内 5 秒缓存
+
+
 def _加载网():
+    """加载蜘蛛网 + 邻接表（2026-09-14 修复：原每次调用都读 1.1MB JSON + 重建 34845 边邻接表·
+    _回写heat 与主流程各调一次 = 每次感应两遍重活）"""
+    import time as _t
+    if _网缓存['数据'] is not None and _t.time() - _网缓存['时间'] < 5:
+        return _网缓存['数据'], _网缓存['adj']
     d = json.load(open(SPIDER, encoding='utf-8-sig'))
     adj = defaultdict(list)
     for l in d['丝线']:
         adj[l['源']].append((l['目标'], l.get('关系', '关联')))
         adj[l['目标']].append((l['源'], l.get('关系', '关联')))
+    _网缓存['数据'], _网缓存['adj'], _网缓存['时间'] = d, adj, _t.time()
     return d, adj
 
 

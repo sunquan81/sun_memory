@@ -128,6 +128,7 @@ def 预感召回(brother_name: str = "孙呈", context: str = "") -> dict:
 
     # ── 招式1 上轮直续 / 精准召回（2026-08-25 父令）──
     上轮 = ""
+    lx_r = None  # 2026-09-13 外部审查修复：显式初始化（原用 'lx_r' in dir() 检查不可靠）
     if context.strip():
         # 有 context → 精准召回：用联想召回的概念匹配·找最相关的记忆（不是最近）
         try:
@@ -192,7 +193,7 @@ def 预感召回(brother_name: str = "孙呈", context: str = "") -> dict:
     # ── 通道① 联想召回 ──
     # 2026-08-26 性能修复（父令短板③）：预感召回是预检索·不点亮（点亮留给真正命中·省写库IO）
     # 且复用招式1的联想结果（lx_r）——避免对同一 context 重复调联想召回（1.8s/次）
-    联想 = lx_r if (context and 'lx_r' in dir() and lx_r) else (联想召回(context, brother_name=brother_name, 点亮=False) if context else {"相关唤起": []})
+    联想 = lx_r if (context and lx_r) else (联想召回(context, brother_name=brother_name, 点亮=False) if context else {"相关唤起": []})
 
     # ── 通道② 知识库检索 ──
     # 2026-08-17 全检查修复：知识库检索已优化（LIMIT100+逐bg索引·0.05s）·恢复完整通道

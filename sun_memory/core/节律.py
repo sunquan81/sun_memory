@@ -14,7 +14,7 @@
   保护：核心层/高自我相关/重要标记 → 慢衰减或最低热度地板（不凉死）
   沉冷：长期低 heat 且非保护 → 沉到冷层（仍保留·只是不热）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
-import sqlite3, os, math
+import sqlite3, os, math, sys, time  # 2026-09-13 外部审查修复：__main__ 块用到 sys/time 但未导入
 from datetime import datetime
 
 DB_PATH = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))

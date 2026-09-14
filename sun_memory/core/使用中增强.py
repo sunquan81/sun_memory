@@ -12,10 +12,18 @@
 这就是"一起被想起的边变粗"——网自己长。
 """
 import json, os, shutil, time
+
+try:
+    from 线程保护 import 加锁  # 2026-09-14 吸收收束版优点：全局状态线程保护
+except Exception:
+    import threading as _th_mod
+    _th_lock = _th_mod.RLock()
+    def 加锁(): return _th_lock
+
 from datetime import datetime
 from collections import defaultdict
 
-SPIDER = os.environ.get("蜘蛛网_INDEX", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "蜘蛛网", "索引.json"))
+SPIDER = os.environ.get('蜘蛛网_INDEX', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '蜘蛛网', '索引.json'))
 
 # ── 参数（父令口径·保守小步）──
 增强Δ = 0.06          # 一起点亮·边+0.06（上限1.0）
@@ -32,9 +40,10 @@ _批写阈值 = 20
 
 def _读网():
     global _缓存网
-    if _缓存网 is None:
-        _缓存网 = json.load(open(SPIDER, encoding='utf-8-sig'))
-    return _缓存网
+    with 加锁():
+        if _缓存网 is None:
+            _缓存网 = json.load(open(SPIDER, encoding='utf-8-sig'))
+        return _缓存网
 
 
 def _写网():

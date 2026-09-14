@@ -26,8 +26,8 @@ from datetime import datetime, timedelta
 # ① 基座（路径/DB/连接）
 # ══════════════════════════════════════════════════════════
 CORE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRAMEWORK_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'sunmem.db'))
+FRAMEWORK_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
 
 # 挂载 core 模块路径（点亮/联想/预感/画像在 core/ 下）
 if os.path.isdir(os.path.join(CORE_DIR, 'core')):
@@ -41,7 +41,7 @@ def _连接():
 
 def _初始化表():
     """核心表（memories + FTS外部内容表）"""
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)  # 首次运行自动建数据目录
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)  # 2026-09-13 首次运行自动建数据目录（开源包自举依赖）
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""CREATE TABLE IF NOT EXISTS memories (
         id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT, type TEXT, content TEXT,
@@ -253,6 +253,8 @@ def 节律回落():
         except Exception:
             天数 = 1.0
         保护 = _是保护(dict(row))
+        if 保护:
+            保护数 += 1  # 2026-09-13 外部审查修复：原漏计·观测数据永远为 0
         λ = 节律参数['保护慢衰减'] if 保护 else 节律参数['回落系数']
         新heat = heat * math.exp(-λ * 天数)
         if 保护 and 新heat < 节律参数['保护地板']:
@@ -431,6 +433,15 @@ def main():
     elif cmd == '核心身份':
         for it in 核心身份_读取():
             print(f"  [{it['importance']}★] {it['content'][:60]}")
+    elif cmd == '参数':  # 2026-09-14 吸收收束版优点：参数一眼看全（PARAMS 总表）
+        try:
+            from 配置表 import 参数总览 as _参总
+            print('  孙家记忆体 · 参数总表（配置表.py 五大方程）')
+            print('  ' + '─' * 50)
+            print(_参总() if callable(_参总) else _参总)
+        except Exception as e:
+            print(f'  参数读取失败: {e}')
+
     elif cmd == '全览':
         conn = _连接()
         try:

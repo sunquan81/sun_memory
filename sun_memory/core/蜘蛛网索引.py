@@ -10,6 +10,13 @@ from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 
+try:
+    from 线程保护 import 加锁  # 2026-09-14 吸收收束版优点：全局状态线程保护
+except Exception:
+    import threading as _th_mod
+    _th_lock = _th_mod.RLock()
+    def 加锁(): return _th_lock
+
 # ── 框架根路径 ──
 # 2026-08-16 路径修复（父令消融测试发现）：插件版 parent.parent.parent 解析到 plugins/·
 # 而真实蜘蛛网在孙家记忆体系——生产环境蜘蛛网一直是空壳（联想召回多跳从未生效）
@@ -46,14 +53,17 @@ def ensure_index():
         with open(INDEX_PATH, "w", encoding="utf-8") as f:
             json.dump(default, f, ensure_ascii=False, indent=2)
         return default
-    with open(INDEX_PATH, "r", encoding="utf-8") as f:
-        _索引缓存['数据'] = json.load(f)
-        _索引缓存['时间'] = _time.time()
-        return _索引缓存['数据']
+    with 加锁():  # 2026-09-14 线程保护：读文件+写缓存原子化
+        with open(INDEX_PATH, "r", encoding="utf-8") as f:
+            _索引缓存['数据'] = json.load(f)
+            _索引缓存['时间'] = _time.time()
+            return _索引缓存['数据']
 
 def save_index(index):
+    _tmp = str(INDEX_PATH) + ".tmp"  # 2026-09-13 外部审查修复：提前定义（原 L82 才定义·L66 异常分支先用会 NameError）
     # 2026-08-16 性能修复配套：写盘后缓存失效（ensure_index 缓存的是旧数据）
-    _索引缓存['数据'] = None
+    with 加锁():  # 2026-09-14 线程保护
+        _索引缓存['数据'] = None
     # 2026-08-16 自愈接入（父令）：写盘后轻量读回校验（只验证文件可打开·不全量 load 避免拖慢）
     # 全量完整性校验由 自愈.py 定期做（provider 启动时）——热路径只做防损坏最小检查
     try:
@@ -67,6 +77,11 @@ def save_index(index):
                 _f.write("\\n# save_index 写回校验失败: %s\\n" % _e)
         except Exception:
             pass
+    # 2026-09-14 修复：统计字段曾被外部脚本写成字符串（"节点6888·丝线34845·..."）→ 规范化为 dict
+    # 影响：save_index 一直在 TypeError → 蜘蛛网写盘静默失败
+    if not isinstance(index.get("统计"), dict):
+        _旧 = index.get("统计")
+        index["统计"] = {"_备注": _旧} if _旧 else {}
     index["统计"]["节点数"] = len(index["节点"])
     index["统计"]["丝线数"] = len(index["丝线"])
     # 2026-08-15 语义升级：统计按 边类型/关系 真分布（旧值曾是残留脏数据）
@@ -302,19 +317,21 @@ def add_edge(源: str, 目标: str, 关系: str = "关联", 权重: float = 1.0,
                 edge.setdefault("边类型", "共现")
             # 2026-08-16 全检查修复：攒批落盘（原每次全量写 4.3MB·联想召回每次调用织网→越写越慢）
             global _拉边累积
-            _拉边累积 += 1
-            if _拉边累积 >= 20:
-                save_index(index)
-                _拉边累积 = 0
+            with 加锁():  # 2026-09-14 线程保护
+                _拉边累积 += 1
+                if _拉边累积 >= 20:
+                    save_index(index)
+                    _拉边累积 = 0
             return True
 
     edge = {"源": 源, "目标": 目标, "关系": 关系,
             "权重": 权重, "次数": 1, "边类型": 边类型, "方向": 方向}
     index["丝线"].append(edge)
-    _拉边累积 += 1
-    if _拉边累积 >= 20:
-        save_index(index)
-        _拉边累积 = 0
+    with 加锁():  # 2026-09-14 线程保护
+        _拉边累积 += 1
+        if _拉边累积 >= 20:
+            save_index(index)
+            _拉边累积 = 0
     return True
 
 def _hop_search(seed: set, index: dict, max_hop: int = 2, 权重阈值: float = 0.2):
@@ -419,11 +436,12 @@ def search(query: str, deep: bool = False) -> dict:
     # 2026-08-16 性能修复：不再每次 search 都写盘（save_index 原子替换 1.1MB 文件·
     # 联想召回每概念调 search → 几百次写盘 = 基准/召回极慢的根源）。
     # 触发的+1 计数先攒在缓存里·由织网/退出时统一落盘（计数丢失可接受·非关键数据）。
-    _触发累积 += 1
-    if _触发累积 >= 20:
-        # 攒够 20 次搜索才落盘一次
-        save_index(index)
-        _触发累积 = 0
+    with 加锁():  # 2026-09-14 线程保护
+        _触发累积 += 1
+        if _触发累积 >= 20:
+            # 攒够 20 次搜索才落盘一次
+            save_index(index)
+            _触发累积 = 0
     return results
 
 def status() -> dict:

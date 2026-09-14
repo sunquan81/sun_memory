@@ -4,6 +4,14 @@
 职责：召回相关操作全部从这一个文件进入
 """
 import sys, os
+
+try:
+    from 线程保护 import 加锁  # 2026-09-14 吸收收束版优点：全局状态线程保护
+except Exception:
+    import threading as _th_mod
+    _th_lock = _th_mod.RLock()
+    def 加锁(): return _th_lock
+
 import sqlite3
 import json  # 2026-08-27 修复：_读/_存 用 json 缺 import
 import re  # 2026-08-27 修复：_核心词/_关键词 用 re 缺 import
@@ -14,10 +22,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # ═══ 2026-08-26 从原知识库检索.py 迁入的常量 ═══
 _SWITCH_THRESHOLD = 0.15  # 2026-08-27 修复：从原二次补充召回.py 迁入（话题切换检测阈值·缺失致NameError）
 _last_key = {"k": ""}     # 2026-09-07 修复（安弟1589体检·融合二次补充召回时 _last_key 搬丢·触发补充召回一调就NameError）
-ROUTE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '触发路由.json')  # 2026-08-27 修复：从原条件触发路由.py 迁入
-CORPUS_DB = Path(os.environ.get("YUNSOFT_CORPUS") or os.environ.get("YUNSOFT_CORPUS", ""))
-if not CORPUS_DB.exists():
-    CORPUS_DB = Path(os.environ.get("YUNSOFT_CORPUS") or os.environ.get("YUNSOFT_CORPUS", ""))
+ROUTE_PATH = os.environ.get('触发路由_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), '触发路由.json'))  # 2026-08-27 修复：从原条件触发路由.py 迁入
+CORPUS_DB = Path(os.environ.get("YUNSOFT_CORPUS", "corpus.db"))  # 2026-09-14 开源版：云软知识库（可选·环境变量配置）
 
 from 联想召回 import *
 
@@ -75,7 +81,7 @@ def 查知识库(query: str = "", limit: int = 3) -> dict:
     if not query.strip():
         return {"查询": query, "命中": [], "错误": ""}
     if not CORPUS_DB.exists():
-        return {"查询": query, "命中": [], "错误": os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}
+        return {"查询": query, "命中": [], "错误": f"云软库不存在: {CORPUS_DB}"}
 
     bgs = _bigrams(query.strip())[:8]
     if not bgs:
@@ -186,9 +192,12 @@ def _是有意义词(w: str) -> bool:
 def 触发补充召回(cur: str) -> bool:
     """是否触发补充召回（话题切换 + 非重复）"""
     key = cur.strip()[:40]
-    if _last_key["k"] == key:
+    with 加锁():
+        _k已存 = _last_key["k"]  # 2026-09-14 线程保护
+    if _k已存 == key:
         return False
-    _last_key["k"] = key
+    with 加锁():
+        _last_key["k"] = key  # 2026-09-14 线程保护
     return True
 
 

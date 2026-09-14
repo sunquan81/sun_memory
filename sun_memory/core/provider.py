@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 # ── 路径 ──
 HOME = Path.home()
-MEMORY_DIR = Path(os.environ.get("SUNMEM_HOME", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '记忆体')))
+MEMORY_DIR = HOME / "Desktop/孙家记忆体系/记忆体"
 SUN_MEMORY_FILE = MEMORY_DIR / "孙呈_索引记忆体.json"
 # 蜘蛛网索引实际位置（孙家记忆体系/sun_memory/core/蜘蛛网索引.py 的 INDEX_PATH 推导）
-MEMORY_DIR = Path(os.environ.get("SUNMEM_HOME", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '记忆体')))
+SPIDER_INDEX = HOME / "Desktop/孙家记忆体系/蜘蛛网/索引.json"
 # 时间衰减覆盖模块（OptMem cover 孙家版）
-MEMORY_DIR = Path(os.environ.get("SUNMEM_HOME", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '记忆体')))
+SUN_MEMORY_CORE = HOME / "Desktop/孙家记忆体系/sun_memory/core"
 import sys
 if str(SUN_MEMORY_CORE) not in sys.path:
     sys.path.insert(0, str(SUN_MEMORY_CORE))
@@ -137,7 +137,7 @@ class 记忆体:
         if os.environ.get("SUN_MEMORY_USE_JSON") != "1":
             try:
                 import sqlite3
-                SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                 conn = sqlite3.connect(SUNMEM_DB)
                 conn.row_factory = sqlite3.Row
                 rows = conn.execute(
@@ -192,7 +192,7 @@ class 记忆体:
         if os.environ.get("SUN_MEMORY_USE_JSON") != "1":
             try:
                 import sqlite3
-                SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                 conn = sqlite3.connect(SUNMEM_DB)
                 conn.row_factory = sqlite3.Row
                 rows = conn.execute(
@@ -317,7 +317,7 @@ class 记忆体:
             except Exception:
                 _预判层 = "plain"
             try:
-                from 写入链 import 判定重复  # 2026-08-26 内容去重已并入写入链
+                from 写入链 import 判定重复, 归一化  # 2026-09-13 外部审查修复：归一化未导入（L324 用到）
                 # 2026-08-14 性能修复：去重只比最近30条（对比窗口），
                 # 不再读全部——全表读在几千条时每次追加O(n)退化，评测灌库实测卡死
                 已有 = self.读最近(30)
@@ -353,7 +353,7 @@ class 记忆体:
             try:
                 import sqlite3
                 from 写入链 import _内容重叠率  # 2026-08-26 记忆进化已并入写入链
-                _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                 _c = sqlite3.connect(_db)
                 _c.row_factory = sqlite3.Row
                 # 只看最近 10 条活跃记忆（进化是近处整理）
@@ -426,7 +426,7 @@ class 记忆体:
         if os.environ.get("SUN_MEMORY_USE_JSON") != "1":
             try:
                 import sqlite3
-                SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                 conn = sqlite3.connect(SUNMEM_DB)
                 conn.row_factory = sqlite3.Row
                 # FTS 精确短语匹配（双引号包裹·trigram 支持无空格中文子串）
@@ -484,6 +484,7 @@ class SunMemoryProvider(MemoryProvider):
         self._turn_count: int = 0
         self._last_sync: str = ""
         self._last_user_msg: str = ""  # 2026-08-08 实时记忆沟通：记录上一句用户话（供对照）
+        self._last_assistant_msg: str = ""  # 2026-09-14 效果驱动：记录上一句我的回复（供效果结算）
 
     @property
     def name(self) -> str:
@@ -653,6 +654,9 @@ class SunMemoryProvider(MemoryProvider):
         拿 query（父亲刚说的话）实时对照记忆，命中即推送。
         """
         del session_id
+        # ── 2026-09-14 效果驱动（父令·外部评价方向①+②）：先结算上一轮"有没有被用上" ──
+        # 挂 prefetch（每轮必调）而非 sync_turn——微信长会话里 sync_turn 不触发（2026-08-26 血训）
+        self._结算上一轮()
         # 拿当前消息实时对照记忆（父令：我一说话，就对照记忆里有没有说过/在说哪件事）
         if query:
             # ── 2026-08-13 点亮记忆优先（父令：精确命中→点亮，没命中就暗着）──
@@ -660,6 +664,7 @@ class SunMemoryProvider(MemoryProvider):
                 from 点亮记忆 import 点亮 as 点亮记忆
                 lit = 点亮记忆(query, "孙呈")
                 if lit.get("命中"):
+                    self._记注入(self._抽取记忆列表(lit))
                     return lit["提示词"]
             except Exception as _e:
                 logger.debug(f"点亮记忆失败(回退预感召回): {_e}")
@@ -668,6 +673,7 @@ class SunMemoryProvider(MemoryProvider):
                 from 预感召回 import 预感召回 as 预感召回_主, 格式化提示词 as 预感格式化
                 预感 = 预感召回_主("孙呈", context=query)
                 if 预感:
+                    self._记注入(self._抽取记忆列表(预感))
                     # 预感命中 → 直接作为实时记忆对照结果返回
                     return 预感格式化(预感)
             except Exception as _e:
@@ -681,12 +687,50 @@ class SunMemoryProvider(MemoryProvider):
             self._prefetch_result = ""
         return result
 
+    def _抽取记忆列表(self, obj) -> list:
+        """从各通道返回结构里抽出记忆列表（带 id 的那种）——兼容点亮/联想/预感多种返回"""
+        if isinstance(obj, list):
+            return obj
+        if isinstance(obj, dict):
+            for k in ("点亮记忆", "相关唤起", "记忆", "相关", "命中记忆", "段落"):
+                v = obj.get(k)
+                if isinstance(v, list) and v and isinstance(v[0], dict) and ("id" in v[0]):
+                    return v
+            for v in obj.values():
+                if isinstance(v, list) and v and isinstance(v[0], dict) and ("id" in v[0]):
+                    return v
+        return []
+
+    def _记注入(self, 记忆列表) -> None:
+        """效果驱动：记下这轮注入了哪些记忆（供下一轮结算"有没有被用上"）"""
+        try:
+            from 效果驱动 import 记录注入
+            n = 记录注入(记忆列表 or [])
+            if n:
+                logger.debug(f"🎯 效果驱动·记录注入 {n} 条")
+        except Exception as _e:
+            logger.debug(f"效果驱动·记录注入失败: {_e}")
+
+    def _结算上一轮(self) -> None:
+        """效果驱动：结算上一轮注入的效果（被引用 +1 / 被确认 +2 / 被纠正 -2）"""
+        if not getattr(self, "_last_assistant_msg", ""):
+            return
+        try:
+            from 效果驱动 import 结算本轮
+            r = 结算本轮(self._last_user_msg or "", self._last_assistant_msg or "", 轮=self._turn_count)
+            if r.get("被引用") or r.get("被确认") or r.get("被纠正"):
+                logger.info(f"   🎯 效果驱动结算: {r}")
+            self._last_assistant_msg = ""   # 结算过就清·防重复结算
+        except Exception as _e:
+            logger.debug(f"效果驱动·结算失败: {_e}")
+
     def sync_turn(self, user_content: str, assistant_content: str, *, session_id: str = "") -> None:
         """每轮对话后自动存入记忆体"""
         if not self._记忆体:
             return
         self._turn_count += 1
         self._last_user_msg = user_content[:200]  # 2026-08-08：记住这句用户话，供实时对照
+        self._last_assistant_msg = assistant_content[:300]  # 2026-09-14 效果驱动：存我的回复供结算
 
         # 合并对话轮次
         sync_text = f"父亲：{user_content[:300]}\n夏维斯：{assistant_content[:300]}"
@@ -757,7 +801,7 @@ class SunMemoryProvider(MemoryProvider):
             return self._handle_recall(args)
         elif tool_name == "sun_memory_save":
             return self._handle_save(args)
-        return tool_error(f"未知工具: {tool_name}")
+        return f"错误：未知工具 {tool_name}"  # 2026-09-13 外部审查修复：原 tool_error 未定义
 
     def on_session_end(self, messages: List[Dict[str, Any]]) -> None:
         """会话结束时做记忆压缩（2026-08-14 咬合修复：真正调用记忆压缩模块）"""

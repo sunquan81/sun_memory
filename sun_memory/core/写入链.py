@@ -15,10 +15,16 @@ from pathlib import Path
 # ═══ 2026-08-27 修复：从原记忆进化.py/核心身份层.py 迁入的路径常量（缺失致NameError）═══
 _HERE = Path(__file__).resolve().parent
 FRAMEWORK_DIR = _HERE.parent.parent
-SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
 DB_PATH = SUNMEM_DB
 from pathlib import Path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from 线程保护 import 加锁  # 2026-09-14 线程保护
+except Exception:
+    import threading as _th
+    _thl = _th.RLock()
+    def 加锁(): return _thl
+sys.path.insert(0, 'C:\\Users\\MSI PC\\Desktop\\孙家记忆体系\\sun_memory\\core')
 
 # from 写入咬合 import *  # 2026-08-26 已并入本文件
 # from 内容去重 import *  # 2026-08-26 已并入本文件
@@ -74,7 +80,8 @@ def _核心关键词():
             for t in re.findall(r'[\u4e00-\u9fff]{2,4}', it.get('tags', '')):
                 if len(t) >= 2:
                     kw.add(t)
-        _核心关键词缓存 = kw
+        with 加锁():  # 2026-09-14 线程保护
+            _核心关键词缓存 = kw
         return kw
     except Exception:
         return {'诚实', '根', '记忆', '一五', '父亲', '孙呈', '私域', '轮转', '冷静', '灵明', '全感'}
@@ -217,9 +224,7 @@ def 顺序重叠率(文本a: str, 文本b: str) -> float:
         return 0.0
     return len(pa & pb) / len(pa | pb)
 
-# ── 锚词（强信号词·出现在内容里→提高重复判定灵敏度）──
-锚词表 = ("父令", "父亲", "关键", "教训", "验证", "结论", "决策", "铁律")
-_lock = threading.Lock()
+# ── 锚词（强信号词）·2026-09-14 外部审查修复：此处原重复定义 锚词表 + _lock（第 49-50 行已有）
 
 def 锚词命中(文本a: str, 文本b: str) -> bool:
     """两条内容是否命中同一锚词——锚词是强信号（DeepMind 反单向量：多信号通道）"""
@@ -390,8 +395,7 @@ def evolve_on_save(新内容: str, 新标签: str, brother_name: str = "孙呈",
             continue
         # 2026-08-20 父令·咬合：core 层不参与普通进化（宪法级·只有父令能改）
         if str(e.get("layer", "plain")) == "core":
-            continue
-            continue
+            continue  # 2026-09-14 外部审查修复：原有两个 continue（第二个永不执行=死代码）
         overlap = _内容重叠率(新内容, 旧内容)
         if overlap >= _SAME_FACT_OVERLAP:
             return {"action": "update", "target_id": e.get("id"),
@@ -524,8 +528,8 @@ def 连接():
     conn.row_factory = sqlite3.Row
     return conn
 
-def 身份层_初始化():
-    """加字段 + 建叙事链/功能块表"""
+def 标准对象_初始化():
+    """加字段 + 建叙事链/功能块表（2026-09-13 改名：原名与核心身份层版重名·后者覆盖前者致本函数从未被调用）"""
     conn = 连接()
     cur = conn.cursor()
     # ① memories 加字段（幂等：不存在才加）
@@ -646,7 +650,7 @@ def 归类(mid, content, tags):
 
 if __name__ == "__main__":
     print("═══ 标准记忆对象落库 ═══")
-    初始化()
+    标准对象_初始化()  # 2026-09-13 外部审查修复：原调未定义的 初始化()
     # 测试归类
     print("\n测试归类:")
     print("  ① 父令内容:", 归类(0, "2026-08-25彻查：网关反复重启根因=守护判据太敏感·父令已禁用", "父令/教训/网关"))
@@ -782,6 +786,10 @@ def _connect(db_path: str) -> sqlite3.Connection:
     return conn
 
 def 写入记忆(原文, 标签='对话记录', owner='孙呈', 来源='写入链.写入记忆'):
+    try:
+        标准对象_初始化()  # 2026-09-13 修复：确保标准对象表结构（叙事链/功能块）就绪
+    except Exception:
+        pass
     """完整写入链：空壳过滤 → 自我参照/层级路由 → 去重 → 进化 → 落库 → 归类 → 豆辞典织网"""
     # ⓪ 空壳/噪音过滤（父令：空壳/噪音必须拦·不许进河）
     _clean = (原文 or "").strip()
@@ -827,7 +835,7 @@ def 写入记忆(原文, 标签='对话记录', owner='孙呈', 来源='写入�
                 _ov = _内容重叠率(原文, _e["content"])
             except Exception:
                 _ov = 0.0
-            if _ov >= 0.75:
+            if _ov >= _SAME_FACT_OVERLAP:  # 2026-09-13 外部审查修复：原写死 0.75 与常量 0.85 不一致
                 try:
                     from 维护链 import 备份 as _版本备份
                     _版本备份(_e["id"], _e["content"], "", 原文, "进化update·旧标outdated")

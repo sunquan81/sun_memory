@@ -32,7 +32,7 @@ from pathlib import Path
 import sqlite3
 from datetime import datetime
 
-DB_PATH = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+DB_PATH = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
 
 # 2026-08-27 修复：_记忆体路径 依赖 FRAMEWORK_DIR·融合时漏迁补回
 FRAMEWORK_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -354,13 +354,7 @@ def 状态统计(brother_name: str = "孙呈") -> dict:
     }
 
 
-if __name__ == "__main__":
-    print("=== 记忆状态自测 ===")
-    s = 状态统计("孙呈")
-    print("状态:", s)
-    print("=== 完成 ===")
-
-if __name__ == "__main__":
+if __name__ == "__main__":  # 2026-09-14 外部审查修复：原有两个 __main__ 块（前者为融合残留·第二个覆盖其意图）
     print("=" * 50)
     print("  记忆成绩单 · 自测")
     print("=" * 50)

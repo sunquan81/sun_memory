@@ -123,3 +123,22 @@ def 写默认配置(路径=None):
 
 
 _加载配置()
+
+
+def 参数总览() -> str:
+    """参数总表（2026-09-14 吸收收束版优点：一眼看全）"""
+    import json as _j
+    行 = []
+    try:
+        _fn = next((f for f in ('加载配置', '读配置', '配置', 'get_config') if f in dir()), None)
+        参 = globals()[_fn]() if _fn else _默认配置
+    except Exception:
+        参 = _默认配置
+    for 组, 项 in (参 or _默认配置).items():
+        行.append(f'  【{组}】')
+        if isinstance(项, dict):
+            for k, v in 项.items():
+                行.append(f'    {k} = {v}')
+        else:
+            行.append(f'    {项}')
+    return '\n'.join(行)

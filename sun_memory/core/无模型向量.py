@@ -24,6 +24,12 @@ import json
 import os
 import re
 from pathlib import Path
+try:
+    from 线程保护 import 加锁  # 2026-09-14 线程保护
+except Exception:
+    import threading as _th
+    _thl = _th.RLock()
+    def 加锁(): return _thl
 
 # 配置（可调）
 N = 3              # n-gram 长度（3 字符：中文二字词根/英文词根都覆盖）
@@ -214,9 +220,10 @@ def _建倒排(记忆列表: list) -> dict:
             continue
         for idx in _记忆向量(m).keys():
             倒排.setdefault(idx, []).append(mid)
-    _倒排缓存["数据"] = 倒排
-    _倒排缓存["覆盖ids"] = 当前ids
-    _倒排缓存["记忆数"] = len(记忆列表)
+    with 加锁():  # 2026-09-14 线程保护
+        _倒排缓存["数据"] = 倒排
+        _倒排缓存["覆盖ids"] = 当前ids
+        _倒排缓存["记忆数"] = len(记忆列表)
     _保存倒排()
     return 倒排
 

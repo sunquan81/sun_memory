@@ -87,7 +87,7 @@ def _读新库(brother_name: str = "孙呈") -> dict:
     import sqlite3
     SUNMEM_DB = os.environ.get(
         "SUNMEM_DB",
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"),
     )
     conn = sqlite3.connect(SUNMEM_DB)
     conn.row_factory = sqlite3.Row
@@ -150,10 +150,27 @@ def 连接(库路径: str = "") -> "sqlite3.Connection":
     import sqlite3
     if not 库路径:
         库路径 = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
-    os.makedirs(os.path.dirname(库路径) or '.', exist_ok=True)
-    conn = sqlite3.connect(库路径, timeout=2.0)
+    os.makedirs(os.path.dirname(库路径) or '.', exist_ok=True)  # 2026-09-13 首次运行自动建目录
+    conn = sqlite3.connect(库路径, timeout=2.0, check_same_thread=False)  # 2026-09-14 吸收收束版优点：允许跨线程（provider 后台线程预取）
     try:
         conn.execute("PRAGMA query_only=ON")
+    except Exception:
+        pass
+    return conn
+
+
+def 写连接(库路径: str = ""):  # 2026-09-14 去掉字符串注解（pyflakes 误报未定义名）
+    """统一写连接（2026-09-14 吸收收束版优点：连接管理统一）
+    特性：可写 + 忙超时 5s + 跨线程允许 + WAL + row_factory
+    """
+    import sqlite3 as _sq
+    if not 库路径:
+        库路径 = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+    os.makedirs(os.path.dirname(库路径) or '.', exist_ok=True)
+    conn = _sq.connect(库路径, timeout=5.0, check_same_thread=False)
+    conn.row_factory = _sq.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
     except Exception:
         pass
     return conn

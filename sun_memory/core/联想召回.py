@@ -363,6 +363,7 @@ def 联想召回(context: str = "", brother_name: str = "孙呈",
     if len(_段落直命) >= 10:
         # 段落索引命中足够 → 不全量读（只读命中的·按id取内容）
         try:
+            import sqlite3 as _sq  # 2026-09-13 外部审查修复：原 _sq 在 L442 才 import·此处先用会 NameError
             _conn2 = _sq.connect(os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db')))
             _conn2.execute("PRAGMA query_only=ON")
             _ids2 = [x["id"] for x in _段落直命]
@@ -401,7 +402,7 @@ def 联想召回(context: str = "", brother_name: str = "孙呈",
         # 段落节点命中也要返回（即使无概念·HippoRAG 2 段落召回）
         _段 = []
         try:
-            from 蜘蛛网索引 import  段落节点开关 as _开关
+            from 蜘蛛网索引 import 段落节点开关 as _开关, 按概念取段落 as 按概念取段落  # 2026-09-13 外部审查修复：原未导入（L408 用到）
             if _开关:  # 2026-08-26 段落节点已并入蜘蛛网索引
                 for c in 蜘蛛网关联[:3]:
                     for h in 按概念取段落(c, 上限=2):
@@ -667,6 +668,19 @@ def 联想召回(context: str = "", brother_name: str = "孙呈",
                     elif _d.days <= 30: _x["融合分"] += 2.0
                 except Exception:
                     pass
+        # ── 2026-09-14 效果驱动（父令·外部评价方向①+②）：使用效果分加进融合分 ──
+        # "用了之后效果好不好"→ 强化/降温（默认生效·SUNMEM_EFFECT_SHADOW=1 可切影子观测）
+        try:
+            from 效果驱动 import 批量效果分 as _批量效果, 影子模式 as _影子
+            if not _影子():
+                _ef = _批量效果([int(x["id"]) for x in 相关 if x.get("id")])
+                for _x in 相关:
+                    _s = _ef.get(int(_x.get("id") or 0), 0.0)
+                    if _s:
+                        _x["效果分"] = _s
+                        _x["融合分"] += 0.5 * _s   # 轻权重（0.5×·上限±2.5）·不压过相关性
+        except Exception as _ee:
+            _静默日志('效果驱动', _ee)
         相关.sort(key=lambda x: (x.get("融合分", -1e9), x.get("成绩单加权", 0.0),
                                 x.get("命中", 0), x.get("时间", "")), reverse=True)
     except Exception as _e:

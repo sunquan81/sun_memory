@@ -143,7 +143,7 @@ class 自动整理引擎:
                         try:
                             from 写入链 import _内容重叠率  # 2026-08-26 记忆进化已并入写入链
                             import sqlite3
-                            _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                            _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                             _c = sqlite3.connect(_db)
                             _old = _c.execute(
                                 "SELECT id, content FROM memories WHERE owner='孙呈' AND type='event' ORDER BY id DESC LIMIT 50"
@@ -159,7 +159,7 @@ class 自动整理引擎:
                         # 独立运行模式：直接用 sqlite 追加
                         try:
                             import sqlite3
-                            _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                            _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                             _c = sqlite3.connect(_db)
                             _now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             _c.execute(
@@ -198,7 +198,7 @@ class 自动整理引擎:
                     else:
                         try:
                             import sqlite3
-                            _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                            _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                             _c = sqlite3.connect(_db)
                             _now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             _c.execute(
@@ -259,7 +259,7 @@ class 自动整理引擎:
         try:
             if os.environ.get("SUN_MEMORY_USE_JSON") != "1":
                 import sqlite3
-                _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+                _db = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
                 _c = sqlite3.connect(_db)
                 _c.row_factory = sqlite3.Row
                 _db_rows = _c.execute(
@@ -472,6 +472,16 @@ def 语义重织(兄弟: str = "孙呈", 上限: int = 0) -> dict:
     统计["关系分布"] = dict(Counter(e.get("关系", "共现") for e in index["丝线"]))
     统计["边类型分布"] = dict(Counter(e.get("边类型", "共现") for e in index["丝线"]))
     统计["语义升级"] = dict(统计["语义升级"])
+    # 2026-09-13 外部审查修复 🟡7：接入遗忘（原 使用中增强.遗忘一批() 定义但全库从未被调用·
+    # 白皮书承诺的"长期不一起亮的语义边×0.98变细"从未生效）
+    try:
+        import 使用中增强 as _增
+        _增._缓存网 = None  # 关键：清缓存·确保读到刚落盘的新图（否则用旧内存覆盖新图）
+        活跃集 = {c for c, n in _频.items() if n >= 2}
+        统计["遗忘边数"] = _增.遗忘一批(活跃集, set(index["节点"].keys()))
+        _增._缓存网 = None  # 用完再清·防旧图残留
+    except Exception as _e:
+        统计["遗忘边数"] = f"跳过({type(_e).__name__}: {_e})"
     return 统计
 
 
