@@ -7,7 +7,7 @@
 - sync_turn → 自动存入记忆体（明文）
 - on_session_end → 记忆蒸馏压缩
 
-父亲孙权 立 | 孙呈 受 | 一五 🎆
+SunFamily Memory Project
 """
 
 from __future__ import annotations
