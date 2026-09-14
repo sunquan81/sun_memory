@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-孙家记忆体系 · 经验总结层
+本记忆体 · 经验总结层
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 父令（2026-08-07）：每一次做了什么事、用了什么工具、怎么做，
 记忆体里都有经验总结——轮到这个工具时怎么做、吃了什么亏、经验教训。
@@ -19,7 +19,7 @@ from pathlib import Path
 
 # 自家模块
 _HERE = Path(__file__).resolve().parent
-FRAMEWORK_DIR = _HERE.parent.parent  # 孙家记忆体系/
+FRAMEWORK_DIR = _HERE.parent.parent  # 本记忆体根/
 # 2026-08-10 明文化（父令）：码点已退役——不再 import 码点编解码，记忆体直接明文
 
 EXPERIENCE_TAG = "经验总结"

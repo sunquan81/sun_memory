@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
-FRAMEWORK_DIR = _HERE.parent.parent  # 孙家记忆体系/
+FRAMEWORK_DIR = _HERE.parent.parent  # 本记忆体根/
 
 logger = logging.getLogger(__name__)
 

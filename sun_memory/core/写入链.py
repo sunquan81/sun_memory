@@ -17,6 +17,7 @@ _HERE = Path(__file__).resolve().parent
 FRAMEWORK_DIR = _HERE.parent.parent
 SUNMEM_DB = os.environ.get("SUNMEM_DB", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sunmem.db"))
 DB_PATH = SUNMEM_DB
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)   # 2026-09-14 首次运行自动建数据目录（开源包自举必需）
 from pathlib import Path
 try:
     from 线程保护 import 加锁  # 2026-09-14 线程保护
@@ -24,7 +25,7 @@ except Exception:
     import threading as _th
     _thl = _th.RLock()
     def 加锁(): return _thl
-sys.path.insert(0, 'C:\\Users\\MSI PC\\Desktop\\孙家记忆体系\\sun_memory\\core')
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # 开源版：本模块所在目录
 
 # from 写入咬合 import *  # 2026-08-26 已并入本文件
 # from 内容去重 import *  # 2026-08-26 已并入本文件

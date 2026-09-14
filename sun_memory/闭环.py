@@ -33,7 +33,7 @@ from datetime import datetime
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
-FRAMEWORK_DIR = _HERE.parent if _HERE.name == "sun_memory" else _HERE.parent.parent   # 孙家记忆体系/
+FRAMEWORK_DIR = _HERE.parent if _HERE.name == "sun_memory" else _HERE.parent.parent   # 本记忆体根/
 CORE_DIR = _HERE / "core" if _HERE.name == "sun_memory" else _HERE                    # sun_memory/core/
 for _p in (str(FRAMEWORK_DIR), str(CORE_DIR)):
     if _p not in sys.path:

@@ -7,15 +7,15 @@
   不再让 31 个文件互相 import——全部收进这一个文件·按区域组织
 
 【标准命令】（产品化接口）
-  python 孙家记忆体.py 醒来        → 感知注入 + 画像（醒来第一件事）
-  python 孙家记忆体.py 写入 "内容"  → 写入链（去重→咬合→进化→落库）
-  python 孙家记忆体.py 召回 "词"    → 五通道召回（点亮/联想/预感/经验/蜘蛛网）
-  python 孙家记忆体.py 成绩单       → 活性账本
-  python 孙家记忆体.py 睡前         → 状态 + 体检 + 镜像
-  python 孙家记忆体.py 织网         → 蜘蛛网重织
-  python 孙家记忆体.py 节律         → heat 振荡观测
-  python 孙家记忆体.py 全览         → 模块地图 + 数据账本
-  python 孙家记忆体.py 自愈         → 修复检查
+  python memory.py 醒来        → 感知注入 + 画像（醒来第一件事）
+  python memory.py 写入 "内容"  → 写入链（去重→咬合→进化→落库）
+  python memory.py 召回 "词"    → 五通道召回（点亮/联想/预感/经验/蜘蛛网）
+  python memory.py 成绩单       → 活性账本
+  python memory.py 睡前         → 状态 + 体检 + 镜像
+  python memory.py 织网         → 蜘蛛网重织
+  python memory.py 节律         → heat 振荡观测
+  python memory.py 全览         → 模块地图 + 数据账本
+  python memory.py 自愈         → 修复检查
 
 【内部协作】写入链 → 索引同步 → 召回 → 巩固（活的·不是拼盘）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 # ══════════════════════════════════════════════════════════
 CORE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRAMEWORK_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'sunmem.db'))
+DB_PATH = os.environ.get('SUNMEM_DB', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'sunmem.db'))  # 2026-09-14 统一：与 core 层同库（原来多一层 dirname → 建表与读写不同库）
 
 # 挂载 core 模块路径（点亮/联想/预感/画像在 core/ 下）
 if os.path.isdir(os.path.join(CORE_DIR, 'core')):
@@ -338,7 +338,7 @@ def 成绩单(owner='孙呈'):
 def _命令帮助():
     print("""
 孙家记忆体 · 一体化引擎
-用法: python 孙家记忆体.py <命令> [参数]
+用法: python memory.py <命令> [参数]
 
 命令:
   醒来              感知注入 + 画像（醒来第一件事）

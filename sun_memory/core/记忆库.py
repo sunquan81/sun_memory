@@ -19,7 +19,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 _HERE = Path(__file__).resolve().parent
-FRAMEWORK_DIR = _HERE.parent.parent  # 孙家记忆体系/
+FRAMEWORK_DIR = _HERE.parent.parent  # 本记忆体根/
 
 
 def 自动解码(内容) -> str:

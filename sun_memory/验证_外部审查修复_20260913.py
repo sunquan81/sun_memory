@@ -29,7 +29,7 @@ t = 读('core/写入链.py')
    'L46 常量 0.85 + L830 引用常量')
 
 # 🔴2 保护数累加
-t2 = 读('孙家记忆体.py')
+t2 = 读('memory.py')
 查('🔴2 节律回落保护数 += 1', '保护数 += 1' in t2, '原漏计致观测恒0')
 
 # 🔴3 蜘蛛网 _tmp 提前
@@ -90,7 +90,7 @@ undef = [l for l in ((r.stdout or '') + (r.stderr or '')).split('\n')
 查('★ pyflakes 全库未定义名 = 0（生产）', len(undef) == 0, f'剩余 {len(undef)}: {undef[:3]}')
 
 # ★ 端到端功能：写入能打初始化回执
-r2 = subprocess.run([PY, '孙家记忆体.py', '写入', '验证脚本自检条目·请忽略', '--tags', '验证脚本'],
+r2 = subprocess.run([PY, 'memory.py', '写入', '验证脚本自检条目·请忽略', '--tags', '验证脚本'],
                     cwd=BASE, capture_output=True, text=True, encoding='utf-8', errors='ignore', timeout=120)
 ok_write = "'ok': True" in (r2.stdout or '')
 查('★ 端到端·写入通（含初始化回执）', ok_write and '初始化完成' in (r2.stdout or ''),

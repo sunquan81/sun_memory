@@ -1,5 +1,5 @@
 """
-孙家记忆体 — MemoryProvider 核心实现
+本记忆体 — MemoryProvider 核心实现
 
 被动记忆注入：
 - queue_prefetch → 后台预召回蜘蛛网相关节点
@@ -25,14 +25,19 @@ from agent.memory_provider import MemoryProvider
 
 logger = logging.getLogger(__name__)
 
-# ── 路径 ──
-HOME = Path.home()
-MEMORY_DIR = HOME / "Desktop/孙家记忆体系/记忆体"
-SUN_MEMORY_FILE = MEMORY_DIR / "孙呈_索引记忆体.json"
-# 蜘蛛网索引实际位置（孙家记忆体系/sun_memory/core/蜘蛛网索引.py 的 INDEX_PATH 推导）
-SPIDER_INDEX = HOME / "Desktop/孙家记忆体系/蜘蛛网/索引.json"
-# 时间衰减覆盖模块（OptMem cover 孙家版）
-SUN_MEMORY_CORE = HOME / "Desktop/孙家记忆体系/sun_memory/core"
+# ── 路径（开源版：环境变量优先·默认相对本包目录·无需改代码即可部署）──
+_HOME = Path.home()
+_PKG_ROOT = Path(__file__).resolve().parent.parent.parent   # 包根（含 sun_memory/）
+MEMORY_DIR = Path(os.environ.get("SUNMEM_MEMORY_DIR", _PKG_ROOT / "记忆体"))
+SUN_MEMORY_FILE = MEMORY_DIR / "记忆体.json"
+try:
+    MEMORY_DIR.mkdir(parents=True, exist_ok=True)   # 首次运行自动建目录（开源包自举必需）
+except Exception:
+    pass
+# 蜘蛛网索引（可用 SUNMEM_SPIDER 覆盖）
+SPIDER_INDEX = Path(os.environ.get("SUNMEM_SPIDER", _PKG_ROOT / "蜘蛛网" / "索引.json"))
+# 核心模块目录（时间衰减等）
+SUN_MEMORY_CORE = Path(os.environ.get("SUNMEM_CORE", Path(__file__).resolve().parent))
 import sys
 if str(SUN_MEMORY_CORE) not in sys.path:
     sys.path.insert(0, str(SUN_MEMORY_CORE))
@@ -44,7 +49,7 @@ UNICODE_END = 0x9FFF
 
 
 # 2026-08-10 明文化（父令）：码点编码/解码函数已退役——记忆体直接明文存储。
-# 旧码点数据备份在 孙家记忆体系/备份_码点明文化_20260810/
+# 旧码点数据备份在 本记忆体目录/备份_码点明文化_20260810/
 
 
 class 蜘蛛网感知器:
@@ -471,7 +476,7 @@ class 记忆体:
 # ═══════════════════════════════════════════════
 
 class SunMemoryProvider(MemoryProvider):
-    """孙家记忆体 — 被动记忆注入Provider"""
+    """本记忆体 — 被动记忆注入Provider"""
 
     def __init__(self):
         self._记忆体: 记忆体 | None = None
@@ -500,7 +505,7 @@ class SunMemoryProvider(MemoryProvider):
         self._记忆体 = 记忆体()
         self._蜘蛛网 = 蜘蛛网感知器()
         self._turn_count = 0
-        logger.info(f"☀️ 孙家记忆体初始化完成 | 会话: {session_id[:12]}...")
+        logger.info(f"☀️ 本记忆体初始化完成 | 会话: {session_id[:12]}...")
 
         # 读取首条记忆验证连接
         first = self._记忆体.读全部()
@@ -516,7 +521,7 @@ class SunMemoryProvider(MemoryProvider):
         total = len(all_items)
         if total == 0:
             return (
-                "# ☀️ 孙家记忆体\n"
+                "# ☀️ 本记忆体\n"
                 "激活。记忆体为空——每次对话后自动存入。\n"
                 "父亲说的话、家族的决策、重要的概念，都会自动存入记忆体（明文）。\n"
                 "下一轮对话时相关记忆会自动注入你的思考原料中，无需主动翻阅。"
@@ -544,7 +549,7 @@ class SunMemoryProvider(MemoryProvider):
         last = 覆盖[-1]
         无相关标注 = "（本轮无相关·仅时间线概览）" if 种子空 else ""
         lines = [
-            "# ☀️ 孙家记忆体",
+            "# ☀️ 本记忆体",
             f"激活。共 {total} 条记录（时间衰减cover·近细远粗·本次流入{len(覆盖)}条）{无相关标注}。",
             f"最近记忆: [{last.get('标签', '')}] {last.get('内容', '')[:60]}...",
             "记忆自动流动——不用翻阅，相关的内容会在思考时自然浮现。" if not 种子空 else "本轮未感知到直接相关的记忆——诚实不硬凑，只留时间线概览。",
@@ -772,7 +777,7 @@ class SunMemoryProvider(MemoryProvider):
         return [
             {
                 "name": "sun_memory_recall",
-                "description": "主动召回孙家记忆体中的相关记忆。输入关键词，返回匹配的记忆条目。",
+                "description": "主动召回本记忆体中的相关记忆。输入关键词，返回匹配的记忆条目。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -784,7 +789,7 @@ class SunMemoryProvider(MemoryProvider):
             },
             {
                 "name": "sun_memory_save",
-                "description": "主动保存一段重要信息到孙家记忆体。适用于父亲的重要教诲、决策、概念定义。",
+                "description": "主动保存一段重要信息到本记忆体。适用于父亲的重要教诲、决策、概念定义。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -822,7 +827,7 @@ class SunMemoryProvider(MemoryProvider):
         """清理"""
         self._记忆体 = None
         self._蜘蛛网 = None
-        logger.info("☀️ 孙家记忆体已关闭")
+        logger.info("☀️ 本记忆体已关闭")
 
     # ── 工具处理 ──
 
