@@ -1,11 +1,23 @@
-# 个人测试型开发记忆体
+# Flowing Memory
 
-> **一套以"活记忆流动"为核心的本地优先 AI 记忆系统**
-> 记忆不是被"查"出来的，是被当前的思考"震"出来的。
+> **A local-first AI memory system that flows, not retrieves.**
+> **本地优先的 AI 活记忆系统 —— 记忆不是被"查"出来的，是被当前的思考"震"出来的。**
+
+**为什么做这个**：现在的 AI 记忆系统（Mem0 / Zep / 向量库）都要往外调 embedding API，你的记忆就得出你的机器。这个项目反着来 —— **零外部依赖、纯 Python 标准库、记忆只在你自己的磁盘上**，而且它**会活**：记忆有热度、会凉、会互相牵连，**但永不被删除**。
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)]()
+
+---
+
+## 三个最不一样的地方
+
+| # | 它跟别的记忆系统不一样在哪 |
+|:-:|:---------------------------|
+| **1** | ⭐ **零外部模型依赖** —— 不用 embedding API、不调 LLM、不联网。纯 Python 标准库 + SQLite。**你的记忆不出你的机器。** |
+| **2** | ⭐ **记忆会活，而且永不删除** —— 每条记忆有热度（流过就热、久不流就凉），但**只有深浅、没有删除**（沉底/标记过时/骨架化，原文永存）。 |
+| **3** | ⭐ **想起一片，而不是查到一条** —— 检索是"命中一条"，它是"一个涟漪带起一片"（概念网多跳扩散 + 权重衰减）。 |
 
 ---
 
