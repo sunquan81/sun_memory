@@ -16,3 +16,8 @@ __pycache__/
 .vscode/
 .idea/
 data/*.db
+
+# 大哥 2026-10-10：备份不进仓库
+*.bak_*
+*.bak
+__pycache__/
