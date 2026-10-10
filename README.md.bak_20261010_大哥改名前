@@ -1,7 +1,4 @@
-# FlowMemory
-
-> **Note:** the Python package directory is still named `sun_memory/` (historical); the project name is **FlowMemory**.
-
+# Flowing Memory
 
 > **A local-first AI memory system that flows, not retrieves.**
 > **本地优先的 AI 活记忆系统 —— 记忆不是被"查"出来的，是被当前的思考"震"出来的。**
@@ -75,7 +72,7 @@ python memory.py 联想 "父亲"
 python memory.py 全览
 ```
 
-数据默认存储在 `FlowMemory/data/sunmem.db`（可用环境变量 `SUNMEM_DB` 覆盖）。
+数据默认存储在 `sun_memory/data/sunmem.db`（可用环境变量 `SUNMEM_DB` 覆盖）。
 
 ---
 
