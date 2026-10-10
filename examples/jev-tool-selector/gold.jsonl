@@ -1,0 +1,92 @@
+{"context": "跑一下这个 python 脚本看看输出", "label": "bash_exec"}
+{"context": "执行一条命令把结果打印出来", "label": "bash_exec"}
+{"context": "用 shell 把 a.txt 和 b.txt 拼起来", "label": "bash_exec"}
+{"context": "帮我运行测试并贴出结果", "label": "bash_exec"}
+{"context": "读一下 config.json 里写了什么", "label": "file_read"}
+{"context": "看看 README 开头几行", "label": "file_read"}
+{"context": "把这个 md 的内容念给我听", "label": "file_read"}
+{"context": "打开 server.py 看它怎么起服务的", "label": "file_read"}
+{"context": "列一下这个目录里有什么文件", "label": "file_list"}
+{"context": "看看当前文件夹里都有啥", "label": "file_list"}
+{"context": "这个目录下有哪些东西", "label": "file_list"}
+{"context": "新建一个 notes.txt 写上今天的三条结论", "label": "write_file"}
+{"context": "生成一个 hello.py，内容是打印 hi", "label": "write_file"}
+{"context": "把这段文本写进 out.md（整文件覆盖）", "label": "write_file"}
+{"context": "把文件里那一行 old 改成 new", "label": "apply_patch"}
+{"context": "精确替换配置里的端口号 8080 改成 9090", "label": "apply_patch"}
+{"context": "只改这一行代码，别动别的", "label": "apply_patch"}
+{"context": "上网搜一下 Jev 是什么模型", "label": "search_web"}
+{"context": "帮我查一下今天上海的天气", "label": "search_web"}
+{"context": "联网搜索最近的 AI 新闻", "label": "search_web"}
+{"context": "把这个网页的正文抓下来", "label": "fetch_page"}
+{"context": "打开这个链接读正文内容", "label": "fetch_page"}
+{"context": "用一下那个记忆体技能", "label": "skill_use"}
+{"context": "把某个技能的全文取出来看看", "label": "skill_use"}
+{"context": "这件活拆出去让子代理独立跑", "label": "sub_task"}
+{"context": "起一个子代理帮我调研对标的框架", "label": "sub_task"}
+{"context": "评审一下这份产出符不符合要求", "label": "review_work"}
+{"context": "帮我两阶段验收这个答案质量", "label": "review_work"}
+{"context": "在代码里搜哪几个文件写了 TODO", "label": "grep_search"}
+{"context": "正则搜一下所有出现 FIXME 的行", "label": "grep_search"}
+{"context": "找一下所有 py 文件在哪", "label": "glob_find"}
+{"context": "按通配符找第16开头的 json 文件", "label": "glob_find"}
+{"context": "把这个临时文件删掉", "label": "file_delete"}
+{"context": "删除旧的 run.log", "label": "file_delete"}
+{"context": "把这个文件移到 data 目录", "label": "file_move"}
+{"context": "重命名这个文件成 result.md", "label": "file_move"}
+{"context": "先把这活列个清单", "label": "todo"}
+{"context": "写个待办清单记下步骤", "label": "todo"}
+{"context": "开真浏览器打开这个页面截图", "label": "browser_open"}
+{"context": "这个页面要点击才出内容，用浏览器拿渲染后的正文", "label": "browser_open"}
+{"context": "以前有没有干过类似的任务", "label": "session_search"}
+{"context": "翻翻历史账本我上次怎么解决的", "label": "session_search"}
+{"context": "把这条结论记成笔记", "label": "note_write"}
+{"context": "记一条笔记存下这个口径", "label": "note_write"}
+{"context": "看看我之前记的笔记", "label": "note_read"}
+{"context": "读一下那条关于沙箱的笔记", "label": "note_read"}
+{"context": "这事我拿不准，停下来问人", "label": "hitl_ask"}
+{"context": "要动敏感数据，挂个待决单让人拍板", "label": "hitl_ask"}
+{"context": "把这个文件复制一份到 backup", "label": "file_copy"}
+{"context": "拷一整棵目录过去", "label": "file_copy"}
+{"context": "统计这个文件多少行、多大、算个 sha256", "label": "text_stats"}
+{"context": "量化一下这个日志文件的行数和字节数", "label": "text_stats"}
+{"context": "看看这个 csv 的表头和前几行", "label": "data_peek"}
+{"context": "摸一下这个 jsonl 有哪些字段", "label": "data_peek"}
+{"context": "从这个大 json 里按路径取值 a.b", "label": "json_query"}
+{"context": "取 json 里 a.b[0].c 的值", "label": "json_query"}
+{"context": "帮我看看下载目录里有什么", "label": "file_list"}
+{"context": "这份 csv 第一行写了什么表头", "label": "file_read"}
+{"context": "生成一份 markdown 报告写到 report.md", "label": "write_file"}
+{"context": "把函数名 compute 改成 calculate（唯一出现）", "label": "apply_patch"}
+{"context": "搜一下哪行调用了 requests.get", "label": "grep_search"}
+{"context": "找找项目里有哪些 *.spec 文件", "label": "glob_find"}
+{"context": "算一下 1 加到 100 等于多少", "label": "bash_exec"}
+{"context": "把这个目录打成 zip 包", "label": "bash_exec"}
+{"context": "把 logs 目录整个挪到 archive 下面", "label": "file_move"}
+{"context": "删掉那个空目录 tmp/", "label": "file_delete"}
+{"context": "把配置模板复制成正式配置文件", "label": "file_copy"}
+{"context": "这个文件多少行", "label": "text_stats"}
+{"context": "这个数据文件长什么样，先给我看一眼结构", "label": "data_peek"}
+{"context": "从返回体里取出 data.items 这个数组", "label": "json_query"}
+{"context": "任务有点大，先拆成几条待办", "label": "todo"}
+{"context": "查查这个坑以前踩过没有", "label": "session_search"}
+{"context": "把刚才定下来的接口口径落成笔记", "label": "note_write"}
+{"context": "列一下我记过哪些笔记", "label": "note_read"}
+{"context": "查资料：Jevlike 的 top-1 是多少", "label": "search_web"}
+{"context": "把这个文档页面的正文抓下来", "label": "fetch_page"}
+{"context": "这个前端页面要用真浏览器点一下才渲染", "label": "browser_open"}
+{"context": "按验收清单评审一下有没有缺交付物", "label": "review_work"}
+{"context": "并行起两个子代理各干一件小活", "label": "sub_task"}
+{"context": "触发那个技能的完整工作流", "label": "skill_use"}
+{"context": "把 AGENTS.md 读一遍", "label": "file_read"}
+{"context": "列出所有 tests 下的 py 文件", "label": "glob_find"}
+{"context": "全文搜一下 HETU_ 开头的环境变量", "label": "grep_search"}
+{"context": "跑 py_compile 编译检查这个文件", "label": "bash_exec"}
+{"context": "看一下这个 zip 解开后有哪些文件", "label": "file_list"}
+{"context": "写一个 .gitignore 文件", "label": "write_file"}
+{"context": "把版本号 v1 改成 v2，只改这一处", "label": "apply_patch"}
+{"context": "缺一个只有人才能给的口径，停下来问", "label": "hitl_ask"}
+{"context": "清理掉生成出来的中间文件", "label": "file_delete"}
+{"context": "给我这个文件的 sha256 校验和", "label": "text_stats"}
+{"context": "取配置里的 server.port", "label": "json_query"}
+{"context": "把这个 bug 的根因记一条笔记", "label": "note_write"}

@@ -1,0 +1,104 @@
+{
+ "tools": [
+  {
+   "name": "bash_exec",
+   "description": "在沙箱工作目录内执行 bash 命令（可写脚本、跑脚本、查看结果）。破坏性命令会被护栏拦截。结果含 exit_code/stdout/stderr 完整回注。长任务（跑脚本/下载/编译）用 background=true 放后台·不吃 30 秒上限·再用 check_task 查结果。"
+  },
+  {
+   "name": "check_task",
+   "description": "查一个后台任务（bash_exec background=true 起的）跑到哪了：running 只回已经出来的输出尾部·done 回 exit_code/stdout/stderr。何时查由你决定。"
+  },
+  {
+   "name": "file_read",
+   "description": "读文件（第1634回已放开：数据面 txt/json/jsonl/md/log/csv + 代码件 py/js/html/css/toml/yaml/md 等；本框架自家源码默认可读·只读）。按行截断带标注。 写文件请用 write_file/apply_patch（越界写走 A8 审批·读放写不放）。"
+  },
+  {
+   "name": "file_list",
+   "description": "列沙箱内目录内容。"
+  },
+  {
+   "name": "write_file",
+   "description": "在沙箱工作目录内写文本文件（UTF-8·自动建父目录）。默认整文件覆盖；append=true 则追加到末尾（**写长文件/长脚本分段用**·免 bash heredoc 被截断）。改已有文件请优先用 apply_patch（能精确替换、不毁编码/换行）。越界写走 A8 审批（read-only 档直接拦）。"
+  },
+  {
+   "name": "apply_patch",
+   "description": "精确改文件：把文件里**唯一出现一次**的 old 片段替换成 new（其余一字不动）。比 bash heredoc 安全（不毁编码/换行/权限）。报 old/new 行数、行号与改动摘要。"
+  },
+  {
+   "name": "search_web",
+   "description": "真实联网搜索（只读·Bing 引擎·返回标题+链接）。夜间不可用。"
+  },
+  {
+   "name": "fetch_page",
+   "description": "抓取网页正文（只读·协议白名单 http/https）。夜间不可用。"
+  },
+  {
+   "name": "skill_use",
+   "description": "读一个技能（SKILL.md）的全文——技能库索引已在系统提示里给出。命中触发条件的技能会全文注入，不用也不许重复调；这里用于按需取别的技能。只读·零网络·零 API。"
+  },
+  {
+   "name": "sub_task",
+   "description": "起一个**独立子代理**跑一件独立的子任务：它有自己的上下文、自己的预算、自己的轮次，跑完只把结论+证据（run_id/状态/验收/用过的工具）回给你——你的上下文不会被它的过程占满（任务大、要并行、要分头干时用它）。同一轮里调多个 sub_task 会**并发执行**。子代理不能再起子代理（深度上限 1）。它在同一个工作目录里干活，所以让它写不同文件，别互相覆盖。"
+  },
+  {
+   "name": "review_work",
+   "description": "两阶段评审（外面顶级框架的做法）：阶段1 只问「做的是不是任务要的」（对着任务与验收清单挑缺口），阶段2 只问「做得怎么样」（代码/产出的质量与风险，不复述需求）。返回两阶段结论+问题清单。干完一大步、或收尾前自查时用它——评审不过就自己回去补，别装不知道。"
+  },
+  {
+   "name": "grep_search",
+   "description": "在沙箱内**按正则搜文件内容**，返回 file:line:文本（逐行命中·可带 glob 过滤）。找「哪几行写了什么」用它，比 bash grep 更稳（正则写坏会原样报错，不当零命中）。"
+  },
+  {
+   "name": "glob_find",
+   "description": "按通配符找文件（带字节大小），例：pattern=*.py / 第16*.json。找文件在哪用它。"
+  },
+  {
+   "name": "file_delete",
+   "description": "删一个文件或**空**目录（目录非空→宁拦不放·原样报错）。越界删除走 A8 审批、read-only 档直接拦。删前请确认（不可逆）。"
+  },
+  {
+   "name": "file_move",
+   "description": "移动/重命名文件或目录（目标已存在→**不覆盖**·原样报错）。自动建目标父目录。"
+  },
+  {
+   "name": "todo",
+   "description": "任务清单（落盘工作目录 .hetu_todo.json·可回读）。长活开工先写清单、干完回读打勾——比记在脑子里稳（任务大/多轮时尤其有用）。action=write 传 items；action=read 直接回清单。"
+  },
+  {
+   "name": "browser_open",
+   "description": "开**真浏览器**（Playwright·本机 Edge/Chrome 优先·无头）：拿渲染后的正文/标题/HTML、截图落盘、点元素、填表单——JS 渲染页、需要点击才出内容的页，用它（fetch_page 只抓静态正文）。夜间不可用。没装 playwright 会如实报缺件（不假装打开过）。"
+  },
+  {
+   "name": "session_search",
+   "description": "跨会话检索：在本框架自己的账本里搜历史（过去干过的任务/命令/结果）。想知道「以前有没有干过类似的」、或要找旧结论时用它。只读·零 API·零联网；零命中会如实说没搜到。"
+  },
+  {
+   "name": "note_write",
+   "description": "把一条**结论/要点**落盘成结构化笔记（hetu_data/notes/<title>.md），跨上下文压缩不丢。长活里定下来的口径、结论、坑，写一条。"
+  },
+  {
+   "name": "note_read",
+   "description": "读一条结构化笔记；name 省略或传 list → 列出全部笔记。"
+  },
+  {
+   "name": "hitl_ask",
+   "description": "人在环：拿不准 / 要动敏感东西 / 缺人才能定的信息时，**停下来问人**。会挂一张待决单并把本轮交回人（不自己猜着干完·不假装做过）。人裁决后可续跑接着干。真需要人拍板时才用·别当摆设。"
+  },
+  {
+   "name": "file_copy",
+   "description": "复制文件或整棵目录（默认**不覆盖**已有目标·要覆盖请显式 overwrite=true）。目标父目录自动建。走写闸（read-only 拦 / 越界写审批）。"
+  },
+  {
+   "name": "text_stats",
+   "description": "文本统计（只读·零 API）：行数/空行/字符/字节/词数/sha256/最长行——想量化一个文件「多大、几行、校验和」时用它（比肉眼数稳）。"
+  },
+  {
+   "name": "data_peek",
+   "description": "看数据结构（只读·零 API）：csv/tsv 给表头+前 N 行、jsonl 给字段并集、json 给键/数组字段。摸清一个数据文件长什么样用它（别整份读烧 token）。"
+  },
+  {
+   "name": "json_query",
+   "description": "按**点路径**取 JSON 值（只读·零 API）：path 形如 a.b / a.b[0].c / [0].a；path 空 = 整份（截断）。从大 JSON 精确取值用它。"
+  }
+ ]
+}
